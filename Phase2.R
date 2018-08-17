@@ -21,6 +21,7 @@ complaints$Timely.response.<-factor(complaints$Timely.response.)
 complaints$Consumer.disputed.<-factor(complaints$Consumer.disputed.)
 complaints$Company.response.to.consumer<-factor(complaints$Company.response.to.consumer)
 
+###############predicting the company response to consumer#############
 # creating training and testing datasets (75:25)
 set.seed(12345)
 indx<-createDataPartition(complaints$Company.response.to.consumer, p=0.75, list = FALSE)
@@ -36,6 +37,7 @@ nb_classifier_pred<-predict(nb_classifier,newdata = test)
 # creating the confusion table
 xtab<-table(nb_classifier_pred,test$Company.response.to.consumer)
 confusionMatrix(xtab)
+plot(nb_classifier_pred)
 
 #Laplace
 
@@ -61,6 +63,50 @@ xtab<-table(nb_classifier_pred,test$Company.response.to.consumer)
 
 # creating the confusion table
 confusionMatrix(xtab)
+
+###############Likelihood of a Non-Disputed Complaint Feedback#############
+# creating training and testing datasets (75:25)
+set.seed(12345)
+indx<-createDataPartition(complaints$Consumer.disputed., p=0.75, list = FALSE)
+train<-complaints[indx,]
+test<-complaints[-indx,]
+
+# building the Naive Bayes model
+nb_classifier<-	naiveBayes(as.factor(train$Consumer.disputed.)~.,data=train)
+
+# Testing the model on testing data
+nb_classifier_pred<-predict(nb_classifier,newdata = test)
+
+# creating the confusion table
+xtab<-table(nb_classifier_pred,test$Consumer.disputed.)
+confusionMatrix(xtab)
+plot(nb_classifier_pred)
+
+#Laplace
+
+# building the Naive Bayes model with laplace=1
+nb_classifier<-	naiveBayes(as.factor(train$Consumer.disputed.)~.,data=train, laplace = 1)
+
+# Testing the model on testing data
+nb_classifier_pred<-predict(nb_classifier,newdata = test)
+
+xtab<-table(nb_classifier_pred,test$Consumer.disputed.)
+
+# creating the confusion table
+confusionMatrix(xtab)
+
+
+# building the Naive Bayes model with laplace=2
+nb_classifier<-	naiveBayes(as.factor(train$Consumer.disputed.)~.,data=train, laplace = 2)
+
+# Testing the model on testing data
+nb_classifier_pred<-predict(nb_classifier,newdata = test)
+
+xtab<-table(nb_classifier_pred,test$Consumer.disputed.)
+
+# creating the confusion table
+confusionMatrix(xtab)
+
 
 # Sub-sampling
 # Creating subsets for sampling
@@ -147,22 +193,24 @@ library(ROCR)
 library(C50)
 library(randomForest)
 
-complaints <- read_csv("C:/Users/nvidi/Desktop/Lambton/cleaned.csv")
+complaints <- read_csv("C:/Users/nvidi/Desktop/Lambton/Consumer_Complaints.csv")
 complaints <-as.data.frame(complaints)
 
 complaints$Issue<-as.factor(complaints$Issue)
 complaints$Product<-as.factor(complaints$Product)
 complaints$Company<-as.factor(complaints$Company)
 complaints$State<-as.factor(complaints$State)
-complaints$Submitted.via<-as.factor(complaints$Submitted.via)
-complaints$Timely.response.<-as.factor(complaints$Timely.response.)
-complaints$Consumer.disputed.<-as.factor(complaints$Consumer.disputed.)
-complaints$Company.response.to.consumer<-as.factor(complaints$Company.response.to.consumer)
+complaints$`Submitted via`<-as.factor(complaints$Submitted.via)
+complaints$`Timely response?`<-as.factor(complaints$Timely.response.)
+complaints$`Consumer disputed?`<-as.factor(complaints$Consumer.disputed.)
+complaints$`Company response to consumer`<-as.factor(complaints$Company.response.to.consumer)
 
 
-complaints$Consumer.complaint.narrative = NULL
+complaints$X1 = NULL
+complaints$`Sub-product`=NULL
 complaints$Issue = NULL
 complaints$State = NULL
+complaints$`Date received`= NULL
 complaints<-complaints[-2,]
 complaints<-complaints[,]
 
@@ -190,16 +238,15 @@ a<-confusionMatrix(xtab)
 a$overall['Accuracy']
 
 #boosting
-model_boost<-C50::C5.0(train[-4],train$`Company response to consumer`,trials=10)
+model_boost<-C50::C5.0(train[-4],train$Company.response.to.consumer,trials=10)
 model_boost
 summary(model_boost)
 pred_boost<-predict(model_boost,test)
 
-xtab_boost<-table(pred_boost,test$`Company response to consumer`)
+xtab_boost<-table(pred_boost,test$Company.response.to.consumer)
 a<-confusionMatrix(xtab_boost)
 a$overall['Accuracy']
 
 # random forest
-model_bag<-randomForest(train$Company.response.to.consumer ~.,data=train, mtry=3, importance=TRUE)
-
-
+model_bag<-randomForest(train$Consumer.disputed. ~.,data = train, mtry=13, ntee = 300)
+str(train)
