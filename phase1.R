@@ -3,6 +3,7 @@ Consumer_Complaints <- read_csv("C:/Users/nvidi/Desktop/Lambton/Consumer_Complai
 View(Consumer_Complaints)
 ncol(Consumer_Complaints)
 nrow(Consumer_Complaints)
+str(Consumer_Complaints)
 
 #checking the coloums for missing values
 colSums(is.na(Consumer_Complaints)|Consumer_Complaints=='')
